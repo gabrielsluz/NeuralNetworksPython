@@ -65,6 +65,29 @@ def compute_cost_LogReg(A, Y):
 
     return cost
 
+def backprop_LogReg(X, Y, A):
+    """
+    Argument:
+    X -- array of shape (1, m) of inputs
+    A -- array of shape (1, m) of network outputs
+    Y -- array of shape (1, m) of the correct outputs
+    
+    Returns:
+    grads -- a dictionary containing the gradient array for W and the gradiente for b
+    
+    """
+    m = X.shape[1]
+
+    dW = np.dot(X, (A - Y).T) / m
+    db = np.sum(A - Y) / m
+
+    grads = {
+        "dW": dW,
+        "db": db
+    }
+    return grads
+
+
 
 """
 W = np.reshape(np.array([2., 3., 4.]), (1, 3))
