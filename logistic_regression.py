@@ -45,12 +45,35 @@ def forwardprop_LogReg(X, parameters):
     A = sigmoid(Z)
 
     return A
+
+def compute_cost_LogReg(A, Y):
+    """
+    Argument:
+    A -- array of shape (1, m) of network outputs
+    Y -- array of shape (1, m) of the correct outputs
+    
+    Returns:
+    cost -- float
+     
+    """
+    m = Y.shape[1]
+    print(m)
+
+    loss_array = -Y * np.log(A) - (1 - Y) * np.log(1 - A) #Loss function
+    print(loss_array)
+    cost = np.sum(loss_array)/m
+
+    return cost
+
+
 """
 W = np.reshape(np.array([2., 3., 4.]), (1, 3))
 b = 1.5
 params = { "W": W, "b": b}
 X = np.array([[0.,1.], [0.,1.], [0., 1.]])
-print(forwardprop_LogReg(X,params))
-print(sigmoid(1.5))
-print(sigmoid(10.5))
+Y = np.reshape(np.array([1, 0]), (1, 2))
+A = forwardprop_LogReg(X,params)
+print("Forward step = " + str(A))
+cost = compute_cost_LogReg(A, Y)
+print("cost = " + str(cost))
 """
