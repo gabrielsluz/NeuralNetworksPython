@@ -1,0 +1,16 @@
+The ideia is to implement different types of neural networks, that can be used without changing the code too much. A library for logistic regression, deep neural networks, different optimizers, regularization, inicialization and others.
+
+Decisions: The neural networks can be of any depth and width, so the forward and back propagations must will be agnostic of this.
+
+Basic functions needed:
+
+-intialize_parameters (Initialize weights and biases) Returns parameters dict
+-foward_prop (makes the forward pass, receives X and parameters) Returns cache and last layer output
+-compute_cost (compute the cost function, receives net output and Y)
+-back_prop (computes the gradients to update parameters, receives caches,Y, last layers output) Returns gradients
+-update_parameters (update the parameters using the gradients,receives parameters, grads, learning_rate) Returns parameters
+
+
+
+
+
