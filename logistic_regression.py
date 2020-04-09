@@ -68,7 +68,7 @@ def compute_cost_LogReg(A, Y):
 def backprop_LogReg(X, Y, A):
     """
     Argument:
-    X -- array of shape (1, m) of inputs
+    X -- matrix of shape (n_x, m) of inputs
     A -- array of shape (1, m) of network outputs
     Y -- array of shape (1, m) of the correct outputs
     
@@ -105,7 +105,39 @@ def update_parameters_LogReg(parameters, grads, learning_rate):
     parameters["W"] -= learning_rate * grads["dW"]
     parameters["b"] -= learning_rate * grads["db"]
 
-    return parameters 
+    return parameters
+
+def LogReg(X, Y, learning_rate, num_iterations, print_cost = False):
+    """
+    Argument:
+    X -- matrix of shape (n_x, m) of inputs
+    Y -- array of shape (1, m) of the correct outputs
+    learning_rate -- float
+    num_iterations -- integer that defines how many iterations of gradient descent
+    print_cost = True returns array with costs
+    
+    Returns:
+    model -- dictionary containing the parameters:
+                    W -- weight vector of shape (1, n_x)
+                    b -- bias float 
+    costs -- array with costs from each iteration
+    
+    """
+    n_x = X.shape[1]
+    parameters = initialize_parameters_rand_LogReg()
+
+    costs = []
+
+    for i in range(num_iterations):
+        A = forwardprop_LogReg(X, parameters)
+
+        if(print_cost)
+            costs.append(compute_cost_LogReg(A, Y))
+
+        grads = backprop_LogReg(X, Y, A)
+        parameters = update_parameters_LogReg(parameters, grads, learning_rate)
+    
+    return parameters, costs
 
 
 """
