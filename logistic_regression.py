@@ -87,6 +87,25 @@ def backprop_LogReg(X, Y, A):
     }
     return grads
 
+def update_parameters_LogReg(parameters, grads, learning_rate):
+    """
+    Argument:
+    parameters -- dictionary containing the parameters:
+                    W -- weight vector of shape (1, n_x)
+                    b -- bias float 
+    grads -- a dictionary containing the gradient array for W and the gradiente for b
+    learning_rate -- float 
+    
+    Returns:
+    parameters -- dictionary containing the parameters:
+                    W -- weight vector of shape (1, n_x)
+                    b -- bias float 
+    
+    """
+    parameters["W"] -= learning_rate * grads["dW"]
+    parameters["b"] -= learning_rate * grads["db"]
+
+    return parameters 
 
 
 """
