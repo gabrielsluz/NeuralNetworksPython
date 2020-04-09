@@ -107,37 +107,72 @@ def update_parameters_LogReg(parameters, grads, learning_rate):
 
     return parameters
 
-def LogReg(X, Y, learning_rate, num_iterations, print_cost = False):
+def LogReg(X, Y, learning_rate, num_iterations, return_cost = False, load_parameters = False, loaded_parameters = {}):
     """
     Argument:
     X -- matrix of shape (n_x, m) of inputs
     Y -- array of shape (1, m) of the correct outputs
     learning_rate -- float
     num_iterations -- integer that defines how many iterations of gradient descent
-    print_cost = True returns array with costs
+    return_cost = True returns array with costs
     
     Returns:
-    model -- dictionary containing the parameters:
+    parameters -- dictionary containing the computed parameters:
                     W -- weight vector of shape (1, n_x)
                     b -- bias float 
     costs -- array with costs from each iteration
     
     """
     n_x = X.shape[1]
-    parameters = initialize_parameters_rand_LogReg()
+    if(load_parameters):
+        parameters = loaded_parameters
+    else:
+        parameters = initialize_parameters_rand_LogReg()
+    
 
     costs = []
 
     for i in range(num_iterations):
         A = forwardprop_LogReg(X, parameters)
 
-        if(print_cost)
+        if(return_cost):
             costs.append(compute_cost_LogReg(A, Y))
 
         grads = backprop_LogReg(X, Y, A)
         parameters = update_parameters_LogReg(parameters, grads, learning_rate)
     
     return parameters, costs
+
+
+def predict_LogReg(X, parameters):
+    """
+    Returns the predictions for the input X
+
+    Argument:
+    X -- matrix of shape (n_x, m) of inputs
+    parameters -- dictionary containing the parameters:
+                    W -- weight vector of shape (1, n_x)
+                    b -- bias float
+    
+    Returns:
+    predictions -- array of shape (1, m) of the predicted outputs
+    
+    """
+    A = forwardprop_LogReg(X, parameters)
+
+    m = A.shape[1]
+
+    predictions = np.zeros((1, m))
+
+    for i in range(m):
+        if A[0,i] <= 0.5:
+            predictions[0,i] = 0
+        else:
+            predictions[0,i] = 1
+    
+    return predictions
+    
+
 
 
 """
