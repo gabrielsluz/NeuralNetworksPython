@@ -10,4 +10,4 @@ def ReLU(x):
     return np.maximum(x, 0)
 
 def ReLU_gradient(x):
-    return 0 if x <= 0 else 1 # Wrong
+    return (x > 0).astype(float) 
