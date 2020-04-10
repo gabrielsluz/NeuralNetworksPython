@@ -27,8 +27,43 @@ def initialize_parameters_rand_NN(layers):
 
     return parameters
 
+def forwardprop_NN(X, parameters, num_hidden_layers):
+    """
+    Argument:
+    X -- matrix of shape (n_x, m) of inputs, each column is a training example
+    parameters -- dictionary containing the parameters:
+                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    bi -- bias array of shape (n_h[i], 1)  
+    num_hidden_layers -- integer
+    
+    Returns:
+    AL -- an array of shape (1, m) containing the outputs for each example #For binary classification
+     
+    """
+    cache = {}
+    A = X
+
+    cache["A0"] = X
+
+    for i in range(1, num_hidden_layers):
+        Z = np.dot(parameters["W" + str(i)], A) + parameters["b" + str(i)]
+        A = ReLU(Z)
+        cache["A" + str(i)] = A
+
+    #Output layer
+    Z = np.dot(parameters["W" + str(num_hidden_layers)], A) + parameters["b" + str(num_hidden_layers)]
+    AL = sigmoid(Z)
+    cache["A" + str(num_hidden_layers)] = AL
+
+    return AL, cache
 
 
-layers = [5, 4, 4 ,4, 2]
+
+X = np.array([[1 , 2, 3], [0, 1, 2]])
+Y = np.array([[0, 1, 0]])
+print(X,Y)
+layers = [2, 1]
 parameters = initialize_parameters_rand_NN(layers)
 print(parameters)
+AL, cache = forwardprop_NN(X, parameters, 1)
+print(AL)
