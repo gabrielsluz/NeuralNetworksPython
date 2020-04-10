@@ -37,33 +37,67 @@ def forwardprop_NN(X, parameters, num_hidden_layers):
     num_hidden_layers -- integer
     
     Returns:
-    AL -- an array of shape (1, m) containing the outputs for each example #For binary classification
+    As -- a list containing the As of each layer
+    Zs -- a list containing the Zs of each layer
      
     """
-    cache = {}
+    As = []
+    Zs = []
     A = X
 
-    cache["A0"] = X
+    As.append(X)
+    Zs.append(0.0) #Just to adjust index
 
     for i in range(1, num_hidden_layers):
         Z = np.dot(parameters["W" + str(i)], A) + parameters["b" + str(i)]
         A = ReLU(Z)
-        cache["A" + str(i)] = A
+        As.append(A)
+        Zs.append(Z)
 
     #Output layer
     Z = np.dot(parameters["W" + str(num_hidden_layers)], A) + parameters["b" + str(num_hidden_layers)]
-    AL = sigmoid(Z)
-    cache["A" + str(num_hidden_layers)] = AL
+    A = sigmoid(Z)
+    As.append(A)
+    Zs.append(Z)
 
-    return AL, cache
+    return As, Zs
+
+
+def backprop_NN(As, Zs, Y, parameters, num_hidden_layers):
+    """
+    Argument:
+    As -- a list containing the As of each layer
+    Zs -- a list containing the Zs of each layer
+    Y -- the labels
+    parameters -- dictionary containing the parameters:
+                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    bi -- bias array of shape (n_h[i], 1)  
+    num_hidden_layers -- integer
+    
+    Returns:
+    grads -- a dictionary with the gradients for each layer
+     
+    """
+    #d{something} means the partial derivative of the cost function in respect to something
+    m = A[0].shape[1]
+    grads = {}
+    #For the output sigmoid layer:
+    dZ = (A[num_hidden_layers] - Y)/m #Change here if changed the output activation function
+
+    for i in range(num_hidden_layers, 0, -1):
+        grads["dW" + str(i)] = np.dot(dZ, A[i - 1].T)
+        grads["db" + str(i)] = np.sum(dZ)
+        #For the next layer (i-1):
+        dA = np.dot(parameters["W" + str(i)].T, dZ)
+        dZ = dA * ReLU_gradient(Zs[i])
 
 
 
 X = np.array([[1 , 2, 3], [0, 1, 2]])
 Y = np.array([[0, 1, 0]])
-print(X,Y)
+#print(X,Y)
 layers = [2, 1]
 parameters = initialize_parameters_rand_NN(layers)
-print(parameters)
-AL, cache = forwardprop_NN(X, parameters, 1)
-print(AL)
+#print(parameters)
+As, Zs = forwardprop_NN(X, parameters, 1)
+print(Zs[1], As[1])
