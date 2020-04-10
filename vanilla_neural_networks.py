@@ -79,17 +79,80 @@ def backprop_NN(As, Zs, Y, parameters, num_hidden_layers):
      
     """
     #d{something} means the partial derivative of the cost function in respect to something
-    m = A[0].shape[1]
+    m = As[0].shape[1]
     grads = {}
     #For the output sigmoid layer:
-    dZ = (A[num_hidden_layers] - Y)/m #Change here if changed the output activation function
+    dZ = (As[num_hidden_layers] - Y)/m #Change here if changed the output activation function
 
     for i in range(num_hidden_layers, 0, -1):
-        grads["dW" + str(i)] = np.dot(dZ, A[i - 1].T)
+        grads["dW" + str(i)] = np.dot(dZ, As[i - 1].T)
         grads["db" + str(i)] = np.sum(dZ)
         #For the next layer (i-1):
         dA = np.dot(parameters["W" + str(i)].T, dZ)
         dZ = dA * ReLU_gradient(Zs[i])
+    
+    return grads
+
+def compute_cost_Sigmoid_NN(A, Y):
+    """
+    Argument:
+    A -- array of shape (1, m) of network outputs
+    Y -- array of shape (1, m) of the correct outputs
+    
+    Returns:
+    cost -- float
+     
+    """
+    epsilon = 0.00000000001
+    m = Y.shape[1]
+
+    loss_array = -Y * np.log(A + epsilon) - (1 - Y) * np.log(1 - A + epsilon) #Loss function with epsilon to avoid log(0)
+    cost = np.sum(loss_array)/m
+
+    return cost
+
+def gradient_checking(X, Y, num_hidden_layers, parameters):
+    As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
+    grads = backprop_NN(As, Zs, Y, parameters, num_hidden_layers)
+
+    aprox_grads = {}
+
+    epsilon = 0.00000000001
+
+    for i in range(num_hidden_layers):
+        #W
+        W_array = np.zeros(parameters["W" + str(i+1)].shape)
+        for j in range(parameters["W" + str(i+1)].shape[0]):
+            for k in range(parameters["W" + str(i+1)].shape[1]):
+                parameters["W" + str(i+1)][j][k] += epsilon
+                As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
+                cost_plus = compute_cost_Sigmoid_NN(As[num_hidden_layers], Y)
+
+                parameters["W" + str(i+1)][j][k] -= 2*epsilon
+                As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
+                cost_minus = compute_cost_Sigmoid_NN(As[num_hidden_layers], Y)
+
+                W_array[j][k] = (cost_plus - cost_minus) / (2*epsilon)
+                parameters["W" + str(i+1)][j][k] += epsilon
+        aprox_grads["dW" + str(i+1)] = W_array
+        #b
+        b_array = np.zeros((parameters["W" + str(i+1)].shape[0],1))
+        for j in range(parameters["W" + str(i+1)].shape[0]):
+            parameters["b" + str(i+1)][j] += epsilon
+            As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
+            cost_plus = compute_cost_Sigmoid_NN(As[num_hidden_layers], Y)
+
+            parameters["b" + str(i+1)][j] -= 2*epsilon
+            As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
+            cost_minus = compute_cost_Sigmoid_NN(As[num_hidden_layers], Y)
+
+            b_array[j] = (cost_plus - cost_minus) / (2*epsilon)
+            parameters["b" + str(i+1)][j] += epsilon
+        aprox_grads["db" + str(i+1)] = b_array
+
+    print(grads)
+    print(aprox_grads)
+
 
 
 
@@ -100,4 +163,7 @@ layers = [2, 1]
 parameters = initialize_parameters_rand_NN(layers)
 #print(parameters)
 As, Zs = forwardprop_NN(X, parameters, 1)
-print(Zs[1], As[1])
+#print(Zs[1], As[1])
+grads = backprop_NN(As, Zs, Y, parameters, 1)
+#print(grads)
+gradient_checking(X, Y, 1, parameters)
