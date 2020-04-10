@@ -12,10 +12,10 @@ def initialize_parameters_rand_LogReg(n_x):
     
     Returns:
     parameters -- dictionary containing the parameters:
-                    W -- weight vector of shape (1, n_x)
+                    W -- weight vector of shape (n_x, 1)
                     b -- bias float 
     """
-    W = np.random.randn(1, n_x) * 0.01
+    W = np.random.randn(n_x, 1) * 0.01
     b = 0.0
 
     parameters = {
@@ -31,7 +31,7 @@ def forwardprop_LogReg(X, parameters):
     Argument:
     X -- matrix of shape (n_x, m) of inputs, each column is a training example
     parameters -- dictionary containing the parameters:
-                    W -- weight vector of shape (1, n_x)
+                    W -- weight vector of shape (n_x, 1)
                     b -- bias float 
     
     Returns:
@@ -41,7 +41,7 @@ def forwardprop_LogReg(X, parameters):
     W = parameters['W']
     b = parameters['b']
 
-    Z = np.dot(W,X) + b
+    Z = np.dot(W.T, X) + b
     A = sigmoid(Z)
 
     return A
@@ -56,9 +56,10 @@ def compute_cost_LogReg(A, Y):
     cost -- float
      
     """
+    epsilon = 0.000001
     m = Y.shape[1]
 
-    loss_array = -Y * np.log(A) - (1 - Y) * np.log(1 - A) #Loss function
+    loss_array = -Y * np.log(A + epsilon) - (1 - Y) * np.log(1 - A + epsilon) #Loss function with epsilon to avoid log(0)
     cost = np.sum(loss_array)/m
 
     return cost
@@ -76,7 +77,7 @@ def backprop_LogReg(X, Y, A):
     """
     m = X.shape[1]
 
-    dW = np.dot(X, (A - Y).T).T / m
+    dW = np.dot(X, (A - Y).T) / m
     db = np.sum(A - Y) / m
 
     grads = {
@@ -89,14 +90,14 @@ def update_parameters_LogReg(parameters, grads, learning_rate):
     """
     Argument:
     parameters -- dictionary containing the parameters:
-                    W -- weight vector of shape (1, n_x)
+                    W -- weight vector of shape (n_x, 1)
                     b -- bias float 
     grads -- a dictionary containing the gradient array for W and the gradiente for b
     learning_rate -- float 
     
     Returns:
     parameters -- dictionary containing the parameters:
-                    W -- weight vector of shape (1, n_x)
+                    W -- weight vector of shape (n_x, 1)
                     b -- bias float 
     
     """
@@ -106,7 +107,7 @@ def update_parameters_LogReg(parameters, grads, learning_rate):
 
     return parameters
 
-def LogReg(X, Y, learning_rate, num_iterations, print_cost = False, load_parameters = False, loaded_parameters = {}):
+def LogReg(X, Y, learning_rate, num_iterations, print_cost = False, print_every = 100, load_parameters = False, loaded_parameters = {}):
     """
     Argument:
     X -- matrix of shape (n_x, m) of inputs
@@ -117,9 +118,9 @@ def LogReg(X, Y, learning_rate, num_iterations, print_cost = False, load_paramet
     
     Returns:
     parameters -- dictionary containing the computed parameters:
-                    W -- weight vector of shape (1, n_x)
+                    W -- weight vector of shape (n_x, 1)
                     b -- bias float 
-    costs -- array with costs from every 100 iterations
+    costs -- array with costs from every print_every iterations
     
     """
     n_x = X.shape[0]
@@ -134,10 +135,10 @@ def LogReg(X, Y, learning_rate, num_iterations, print_cost = False, load_paramet
     for i in range(num_iterations):
         A = forwardprop_LogReg(X, parameters)
 
-        if(i % 100 == 0):
+        if(i % print_every == 0):
             costs.append(compute_cost_LogReg(A, Y))
             if(print_cost):
-                print("Cost in iteration " + str(i) + " is = " + str(costs[i % 100]))
+                print("Cost in iteration " + str(i) + " is = " + str(costs[i // print_every]))
 
         grads = backprop_LogReg(X, Y, A)
         parameters = update_parameters_LogReg(parameters, grads, learning_rate)
@@ -152,7 +153,7 @@ def predict_LogReg(X, parameters):
     Argument:
     X -- matrix of shape (n_x, m) of inputs
     parameters -- dictionary containing the parameters:
-                    W -- weight vector of shape (1, n_x)
+                    W -- weight vector of shape (n_x, 1)
                     b -- bias float
     
     Returns:
@@ -173,20 +174,3 @@ def predict_LogReg(X, parameters):
     
     return predictions
     
-
-
-"""
-
-W = np.reshape(np.array([2., 3., 4.]), (1, 3))
-b = 1.5
-params = { "W": W, "b": b}
-X = np.array([[0.,1.], [0.,1.], [0., 1.]])
-Y = np.reshape(np.array([1, 0]), (1, 2))
-A = forwardprop_LogReg(X,params)
-print("Forward step = " + str(A))
-cost = compute_cost_LogReg(A, Y)
-print("cost = " + str(cost))
-grads = backprop_LogReg(X, Y, A)
-print(grads)
-params = update_parameters_LogReg(params, grads, 0.4)
-"""
