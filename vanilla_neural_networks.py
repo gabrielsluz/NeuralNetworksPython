@@ -93,6 +93,27 @@ def backprop_NN(As, Zs, Y, parameters, num_hidden_layers):
     
     return grads
 
+def update_parameters_NN(parameters, grads, learning_rate, num_hidden_layers):
+    """
+    Argument:
+    parameters -- dictionary containing the parameters:
+                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    bi -- bias array of shape (n_h[i], 1)b
+    grads -- a dictionary with the gradients for each layer
+    learning_rate -- float 
+    
+    Returns:
+    parameters -- dictionary containing the parameters:
+                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    bi -- bias array of shape (n_h[i], 1)b
+    
+    """
+    for i in range(1, num_hidden_layers + 1):
+        parameters["W" + str(i)] -= learning_rate * grads["dW" + str(i)]
+        parameters["b" + str(i)] -= learning_rate * grads["db" + str(i)]
+
+    return parameters
+
 def compute_cost_Sigmoid_NN(A, Y):
     """
     Argument:
@@ -103,7 +124,7 @@ def compute_cost_Sigmoid_NN(A, Y):
     cost -- float
      
     """
-    epsilon = 0.00000000001
+    epsilon = 0.000000000001
     m = Y.shape[1]
 
     loss_array = -Y * np.log(A + epsilon) - (1 - Y) * np.log(1 - A + epsilon) #Loss function with epsilon to avoid log(0)
