@@ -57,10 +57,8 @@ def compute_cost_LogReg(A, Y):
      
     """
     m = Y.shape[1]
-    print(m)
 
     loss_array = -Y * np.log(A) - (1 - Y) * np.log(1 - A) #Loss function
-    print(loss_array)
     cost = np.sum(loss_array)/m
 
     return cost
@@ -78,7 +76,7 @@ def backprop_LogReg(X, Y, A):
     """
     m = X.shape[1]
 
-    dW = np.dot(X, (A - Y).T) / m
+    dW = np.dot(X, (A - Y).T).T / m
     db = np.sum(A - Y) / m
 
     grads = {
@@ -102,32 +100,33 @@ def update_parameters_LogReg(parameters, grads, learning_rate):
                     b -- bias float 
     
     """
+
     parameters["W"] -= learning_rate * grads["dW"]
     parameters["b"] -= learning_rate * grads["db"]
 
     return parameters
 
-def LogReg(X, Y, learning_rate, num_iterations, return_cost = False, load_parameters = False, loaded_parameters = {}):
+def LogReg(X, Y, learning_rate, num_iterations, print_cost = False, load_parameters = False, loaded_parameters = {}):
     """
     Argument:
     X -- matrix of shape (n_x, m) of inputs
     Y -- array of shape (1, m) of the correct outputs
     learning_rate -- float
     num_iterations -- integer that defines how many iterations of gradient descent
-    return_cost = True returns array with costs
+    print_cost = True prints cost
     
     Returns:
     parameters -- dictionary containing the computed parameters:
                     W -- weight vector of shape (1, n_x)
                     b -- bias float 
-    costs -- array with costs from each iteration
+    costs -- array with costs from every 100 iterations
     
     """
-    n_x = X.shape[1]
+    n_x = X.shape[0]
     if(load_parameters):
         parameters = loaded_parameters
     else:
-        parameters = initialize_parameters_rand_LogReg()
+        parameters = initialize_parameters_rand_LogReg(n_x)
     
 
     costs = []
@@ -135,8 +134,10 @@ def LogReg(X, Y, learning_rate, num_iterations, return_cost = False, load_parame
     for i in range(num_iterations):
         A = forwardprop_LogReg(X, parameters)
 
-        if(return_cost):
+        if(i % 100 == 0):
             costs.append(compute_cost_LogReg(A, Y))
+            if(print_cost):
+                print("Cost in iteration " + str(i) + " is = " + str(costs[i % 100]))
 
         grads = backprop_LogReg(X, Y, A)
         parameters = update_parameters_LogReg(parameters, grads, learning_rate)
@@ -174,8 +175,8 @@ def predict_LogReg(X, parameters):
     
 
 
-
 """
+
 W = np.reshape(np.array([2., 3., 4.]), (1, 3))
 b = 1.5
 params = { "W": W, "b": b}
@@ -185,4 +186,7 @@ A = forwardprop_LogReg(X,params)
 print("Forward step = " + str(A))
 cost = compute_cost_LogReg(A, Y)
 print("cost = " + str(cost))
+grads = backprop_LogReg(X, Y, A)
+print(grads)
+params = update_parameters_LogReg(params, grads, 0.4)
 """
