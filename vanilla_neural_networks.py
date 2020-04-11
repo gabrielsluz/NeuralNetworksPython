@@ -86,10 +86,11 @@ def backprop_NN(As, Zs, Y, parameters, num_hidden_layers):
 
     for i in range(num_hidden_layers, 0, -1):
         grads["dW" + str(i)] = np.dot(dZ, As[i - 1].T)
-        grads["db" + str(i)] = np.sum(dZ)
+        grads["db" + str(i)] = np.sum(dZ, axis=1, keepdims=True)
         #For the next layer (i-1):
-        dA = np.dot(parameters["W" + str(i)].T, dZ)
-        dZ = dA * ReLU_gradient(Zs[i])
+        if i > 1:
+            dA = np.dot(parameters["W" + str(i)].T, dZ)
+            dZ = dA * ReLU_gradient(Zs[i-1])
     
     return grads
 
@@ -114,7 +115,7 @@ def update_parameters_NN(parameters, grads, learning_rate, num_hidden_layers):
 
     return parameters
 
-
+#Main function
 def model_NN(X, Y, layers, learning_rate, num_iterations, print_cost = False, print_every = 100, load_parameters = False, loaded_parameters = {}):
     """
     Argument:
@@ -145,12 +146,12 @@ def model_NN(X, Y, layers, learning_rate, num_iterations, print_cost = False, pr
         As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
 
         if(i % print_every == 0):
-            costs.append(compute_cost_Sigmoid_NN(A, Y))
+            costs.append(compute_cost_Sigmoid_NN(As[num_hidden_layers], Y))
             if(print_cost):
                 print("Cost in iteration " + str(i) + " is = " + str(costs[i // print_every]))
 
         grads = backprop_NN(As, Zs, Y, parameters, num_hidden_layers)
-        parameters = update_parameters_LogReg(parameters, grads, learning_rate, num_hidden_layers)
+        parameters = update_parameters_NN(parameters, grads, learning_rate, num_hidden_layers)
     
     return parameters, costs
 
@@ -225,8 +226,8 @@ def gradient_checking(X, Y, num_hidden_layers, parameters):
                 parameters["W" + str(i+1)][j][k] += epsilon
         aprox_grads["dW" + str(i+1)] = W_array
         #b
-        b_array = np.zeros((parameters["W" + str(i+1)].shape[0],1))
-        for j in range(parameters["W" + str(i+1)].shape[0]):
+        b_array = np.zeros(parameters["b" + str(i+1)].shape)
+        for j in range(parameters["b" + str(i+1)].shape[0]):
             parameters["b" + str(i+1)][j] += epsilon
             As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
             cost_plus = compute_cost_Sigmoid_NN(As[num_hidden_layers], Y)
@@ -238,21 +239,25 @@ def gradient_checking(X, Y, num_hidden_layers, parameters):
             b_array[j] = (cost_plus - cost_minus) / (2*epsilon)
             parameters["b" + str(i+1)][j] += epsilon
         aprox_grads["db" + str(i+1)] = b_array
-
+    print("Computed grads :")
     print(grads)
+    print("Aproximated grads:")
     print(aprox_grads)
 
 
-
-
-X = np.array([[1 , 2, 3], [0, 1, 2]])
+"""
+X = np.array([[1 , 0, 2], [1, 0, 2]])
 Y = np.array([[0, 1, 0]])
 #print(X,Y)
-layers = [2, 1]
+layers = [2, 2, 1]
+num_hidden_layers = len(layers) - 1
 parameters = initialize_parameters_rand_NN(layers)
 #print(parameters)
-As, Zs = forwardprop_NN(X, parameters, 1)
+As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
 #print(Zs[1], As[1])
-grads = backprop_NN(As, Zs, Y, parameters, 1)
+grads = backprop_NN(As, Zs, Y, parameters, num_hidden_layers)
 #print(grads)
-gradient_checking(X, Y, 1, parameters)
+parameters = update_parameters_NN(parameters, grads, 0.5, num_hidden_layers)
+
+#gradient_checking(X, Y, num_hidden_layers, parameters)
+"""
