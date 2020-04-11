@@ -114,6 +114,74 @@ def update_parameters_NN(parameters, grads, learning_rate, num_hidden_layers):
 
     return parameters
 
+
+def model_NN(X, Y, layers, learning_rate, num_iterations, print_cost = False, print_every = 100, load_parameters = False, loaded_parameters = {}):
+    """
+    Argument:
+    X -- matrix of shape (n_x, m) of inputs
+    Y -- array of shape (1, m) of the correct outputs
+    layers -- (n_x,n_h[1], ... ,n_h[n]) The width of each layer, including input and output
+    learning_rate -- float
+    num_iterations -- integer that defines how many iterations of gradient descent
+    print_cost = True prints cost
+    
+    Returns:
+    parameters -- dictionary containing the parameters:
+                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    bi -- bias array of shape (n_h[i], 1)b
+    costs -- array with costs from every print_every iterations
+    
+    """
+    if(load_parameters):
+        parameters = loaded_parameters
+    else:
+        parameters = initialize_parameters_rand_NN(layers)
+    
+
+    costs = []
+    num_hidden_layers = len(layers) - 1
+
+    for i in range(num_iterations):
+        As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
+
+        if(i % print_every == 0):
+            costs.append(compute_cost_Sigmoid_NN(A, Y))
+            if(print_cost):
+                print("Cost in iteration " + str(i) + " is = " + str(costs[i // print_every]))
+
+        grads = backprop_NN(As, Zs, Y, parameters, num_hidden_layers)
+        parameters = update_parameters_LogReg(parameters, grads, learning_rate, num_hidden_layers)
+    
+    return parameters, costs
+
+def predict_NN(X, parameters, num_hidden_layers):
+    """
+    Returns the predictions for the input X
+
+    Argument:
+    X -- matrix of shape (n_x, m) of inputs
+    parameters -- dictionary containing the parameters:
+                    W -- weight vector of shape (n_x, 1)
+                    b -- bias float
+    
+    Returns:
+    predictions -- array of shape (1, m) of the predicted outputs
+    
+    """
+    As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
+
+    m = X.shape[1]
+
+    predictions = np.zeros((1, m))
+
+    for i in range(m):
+        if As[num_hidden_layers][0,i] <= 0.5:
+            predictions[0,i] = 0
+        else:
+            predictions[0,i] = 1
+    
+    return predictions
+
 def compute_cost_Sigmoid_NN(A, Y):
     """
     Argument:
