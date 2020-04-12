@@ -34,7 +34,7 @@ def initialize_parameters_He_NN(layers):
     parameters = {}
 
     for i in range(1, len(layers)):
-        parameters["W" + str(i)] = np.random.randn(layers[i], layers[i-1]) * np.sqrt(2 / layers[i-1])
+        parameters["W" + str(i)] = np.random.randn(layers[i], layers[i-1]) * np.sqrt(2 / layers[i-1]) * 0.01
         parameters["b" + str(i)] = np.zeros((layers[i], 1))
 
     return parameters
