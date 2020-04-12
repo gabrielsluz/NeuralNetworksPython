@@ -5,27 +5,12 @@ It will support in the future some regularization techniques and inicialization.
 
 Requirements:   numpy
                 activation_functions (file in folder)
+                weight_initializations (file in folder)
 """
 import numpy as np
 from activation_functions import *
+from weight_initializations import *
 
-def initialize_parameters_rand_NN(layers):
-    """
-    Argument:
-    layers -- a list that stores the width of each hidden layer and of the input layer
-    
-    Returns:
-    parameters -- dictionary containing the parameters:
-                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
-                    bi -- bias array of shape (n_h[i], 1) 
-    """
-    parameters = {}
-
-    for i in range(1, len(layers)):
-        parameters["W" + str(i)] = np.random.randn(layers[i], layers[i-1]) * 0.01
-        parameters["b" + str(i)] = np.zeros((layers[i], 1))
-
-    return parameters
 
 def forwardprop_NN(X, parameters, num_hidden_layers):
     """
@@ -116,7 +101,7 @@ def update_parameters_NN(parameters, grads, learning_rate, num_hidden_layers):
     return parameters
 
 #Main function
-def model_NN(X, Y, layers, learning_rate, num_iterations, print_cost = False, print_every = 100, load_parameters = False, loaded_parameters = {}):
+def model_NN(X, Y, layers, learning_rate, num_iterations, print_cost = False, print_every = 100, initialization = "rand", loaded_parameters = {}):
     """
     Argument:
     X -- matrix of shape (n_x, m) of inputs
@@ -125,6 +110,10 @@ def model_NN(X, Y, layers, learning_rate, num_iterations, print_cost = False, pr
     learning_rate -- float
     num_iterations -- integer that defines how many iterations of gradient descent
     print_cost = True prints cost
+    initialization -- String the informs the type of weight initalization :
+                        rand -- Random *0.01
+                        he -- He intialization
+                        load -- Load the parameters with loaded_parameters
     
     Returns:
     parameters -- dictionary containing the parameters:
@@ -133,10 +122,15 @@ def model_NN(X, Y, layers, learning_rate, num_iterations, print_cost = False, pr
     costs -- array with costs from every print_every iterations
     
     """
-    if(load_parameters):
+    if(initialization == "load"):
         parameters = loaded_parameters
-    else:
+    elif(initialization == "he"):
+        parameters = initialize_parameters_He_NN(layers)
+    elif(initialization == "rand"):
         parameters = initialize_parameters_rand_NN(layers)
+    else:
+        print("Invalid initialization. Exiting")
+        return
     
 
     costs = []
