@@ -11,3 +11,7 @@ def ReLU(x):
 
 def ReLU_gradient(x):
     return (x > 0).astype(float) 
+
+def softmax(x):
+    x_exp = np.exp(x)
+    return x_exp / np.sum(x_exp)
