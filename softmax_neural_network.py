@@ -192,6 +192,36 @@ def gradient_checking_SNN(X, Y, num_hidden_layers, parameters):
     print("Aproximated grads:")
     print(aprox_grads)
 
+def random_mini_batches(X, Y, mini_batch_size):
+    """
+    Argument:
+    X -- matrix of shape (n_x, m) of inputs
+    Y -- array of shape (1, m) of the correct outputs
+    mini_batch_size -- integer containing the number of examples in each mini batch
+    
+    Returns:
+    mini_batches -- a list of tuples containing pair o Xj and Yj
+    """
+
+    m = X.shape[1]
+    num_batches = math.ceil(m / mini_batch_size)
+    mini_batches = []
+
+    permutation = list(np.random.permutation(m))
+    shuffled_X = X[:, permutation]
+    shuffled_Y = Y[:, permutation].reshape((1,m))
+
+    for j in range(num_batches):
+            if j*mini_batch_size >= m:
+                break
+
+            first = j*mini_batch_size
+            last = min(m, (j+1)*mini_batch_size) 
+            Xj = X[:, first : last]
+            Yj = Y[:, first : last]
+            mini_batch_j = (Xj, Yj)
+            mini_batches.append(mini_batch_j)
+    return mini_batches
 
 
 #Main function
@@ -244,7 +274,7 @@ def model_SNN(X, Y, layers, learning_rate = 0.5, num_iterations = 1000, print_co
     return parameters, costs
 
 
-#Main function
+#Main function for mini batches
 def model_mini_batch_SNN(X, Y, layers, learning_rate = 0.5, mini_batch_size = 512, num_iterations = 1000, print_cost = False, print_every = 100, initialization = "rand", loaded_parameters = {}):
     """
     Argument:
@@ -281,18 +311,12 @@ def model_mini_batch_SNN(X, Y, layers, learning_rate = 0.5, mini_batch_size = 51
     costs = []
     num_hidden_layers = len(layers) - 1
 
-    m = X.shape[1]
-    num_batches = math.ceil(m / mini_batch_size)
+    mini_batches = random_mini_batches(X, Y, mini_batch_size)
+    num_batches = len(mini_batches)
 
     for i in range(num_iterations):
-        for j in range(num_batches + 1):
-            if j*mini_batch_size >= m:
-                break
-
-            first = j*mini_batch_size
-            last = min(m, (j+1)*mini_batch_size) 
-            Xj = X[:, first : last]
-            Yj = Y[:, first : last]
+        for j in range(num_batches):
+            Xj, Yj = mini_batches[j]
 
             As, Zs = forwardprop_SNN(Xj, parameters, num_hidden_layers)
 
