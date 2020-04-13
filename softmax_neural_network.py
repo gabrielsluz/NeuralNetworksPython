@@ -4,10 +4,12 @@ The hidden units are all of the form: ReLU(np.dot(W, A) + b), execept for the la
 It will support in the future some regularization techniques and inicialization.
 
 Requirements:   numpy
+                math
                 activation_functions (file in folder)
                 weight_initializations (file in folder)
 """
 import numpy as np
+import math
 from activation_functions import *
 from weight_initializations import *
 
@@ -101,55 +103,6 @@ def update_parameters_SNN(parameters, grads, learning_rate, num_hidden_layers):
 
     return parameters
 
-#Main function
-def model_SNN(X, Y, layers, learning_rate = 0.5, num_iterations = 1000, print_cost = False, print_every = 100, initialization = "rand", loaded_parameters = {}):
-    """
-    Argument:
-    X -- matrix of shape (n_x, m) of inputs
-    Y -- array of shape (1, m) of the correct outputs
-    layers -- (n_x,n_h[1], ... ,n_h[n]) The width of each layer, including input and output
-    learning_rate -- float
-    num_iterations -- integer that defines how many iterations of gradient descent
-    print_cost = True prints cost
-    initialization -- String the informs the type of weight initalization :
-                        rand -- Random *0.01
-                        he -- He intialization
-                        load -- Load the parameters with loaded_parameters
-    
-    Returns:
-    parameters -- dictionary containing the parameters:
-                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
-                    bi -- bias array of shape (n_h[i], 1)
-    costs -- array with costs from every print_every iterations
-    
-    """
-    if(initialization == "load"):
-        parameters = loaded_parameters
-    elif(initialization == "he"):
-        parameters = initialize_parameters_He_NN(layers)
-    elif(initialization == "rand"):
-        parameters = initialize_parameters_rand_NN(layers)
-    else:
-        print("Invalid initialization. Exiting")
-        return
-    
-
-    costs = []
-    num_hidden_layers = len(layers) - 1
-
-    for i in range(num_iterations):
-        As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
-
-        if(i % print_every == 0):
-            costs.append(compute_cost_Softmax_NN(As[num_hidden_layers], Y))
-            if(print_cost):
-                print("Cost in iteration " + str(i) + " is = " + str(costs[i // print_every]))
-
-        grads = backprop_SNN(As, Zs, Y, parameters, num_hidden_layers)
-        parameters = update_parameters_SNN(parameters, grads, learning_rate, num_hidden_layers)
-    
-    return parameters, costs
-
 def predict_SNN(X, parameters, num_hidden_layers):
     """
     Returns the predictions for the input X
@@ -238,6 +191,121 @@ def gradient_checking_SNN(X, Y, num_hidden_layers, parameters):
     print(grads)
     print("Aproximated grads:")
     print(aprox_grads)
+
+
+
+#Main function
+def model_SNN(X, Y, layers, learning_rate = 0.5, num_iterations = 1000, print_cost = False, print_every = 100, initialization = "rand", loaded_parameters = {}):
+    """
+    Argument:
+    X -- matrix of shape (n_x, m) of inputs
+    Y -- array of shape (1, m) of the correct outputs
+    layers -- (n_x,n_h[1], ... ,n_h[n]) The width of each layer, including input and output
+    learning_rate -- float
+    num_iterations -- integer that defines how many iterations of gradient descent
+    print_cost = True prints cost
+    initialization -- String the informs the type of weight initalization :
+                        rand -- Random *0.01
+                        he -- He intialization
+                        load -- Load the parameters with loaded_parameters
+    
+    Returns:
+    parameters -- dictionary containing the parameters:
+                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    bi -- bias array of shape (n_h[i], 1)
+    costs -- array with costs from every print_every iterations
+    
+    """
+    if(initialization == "load"):
+        parameters = loaded_parameters
+    elif(initialization == "he"):
+        parameters = initialize_parameters_He_NN(layers)
+    elif(initialization == "rand"):
+        parameters = initialize_parameters_rand_NN(layers)
+    else:
+        print("Invalid initialization. Exiting")
+        return
+    
+
+    costs = []
+    num_hidden_layers = len(layers) - 1
+
+    for i in range(num_iterations):
+        As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
+
+        if(i % print_every == 0):
+            costs.append(compute_cost_Softmax_NN(As[num_hidden_layers], Y))
+            if(print_cost):
+                print("Cost in iteration " + str(i) + " is = " + str(costs[i // print_every]))
+
+        grads = backprop_SNN(As, Zs, Y, parameters, num_hidden_layers)
+        parameters = update_parameters_SNN(parameters, grads, learning_rate, num_hidden_layers)
+    
+    return parameters, costs
+
+
+#Main function
+def model_mini_batch_SNN(X, Y, layers, learning_rate = 0.5, mini_batch_size = 512, num_iterations = 1000, print_cost = False, print_every = 100, initialization = "rand", loaded_parameters = {}):
+    """
+    Argument:
+    X -- matrix of shape (n_x, m) of inputs
+    Y -- array of shape (1, m) of the correct outputs
+    layers -- (n_x,n_h[1], ... ,n_h[n]) The width of each layer, including input and output
+    mini_batch_size -- integer that indicates the size of each mini batch
+    learning_rate -- float
+    num_iterations -- integer that defines how many iterations of gradient descent
+    print_cost = True prints cost
+    initialization -- String the informs the type of weight initalization :
+                        rand -- Random *0.01
+                        he -- He intialization
+                        load -- Load the parameters with loaded_parameters
+    
+    Returns:
+    parameters -- dictionary containing the parameters:
+                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    bi -- bias array of shape (n_h[i], 1)
+    costs -- array with costs from every print_every iterations
+    
+    """
+    if(initialization == "load"):
+        parameters = loaded_parameters
+    elif(initialization == "he"):
+        parameters = initialize_parameters_He_NN(layers)
+    elif(initialization == "rand"):
+        parameters = initialize_parameters_rand_NN(layers)
+    else:
+        print("Invalid initialization. Exiting")
+        return
+    
+
+    costs = []
+    num_hidden_layers = len(layers) - 1
+
+    m = X.shape[1]
+    num_batches = math.ceil(m / mini_batch_size)
+
+    for i in range(num_iterations):
+        for j in range(num_batches + 1):
+            if j*mini_batch_size >= m:
+                break
+
+            first = j*mini_batch_size
+            last = min(m, j+1)*mini_batch_size) 
+            Xj = X[:, first : last]
+            Yj = Y[:, first : last]
+
+            As, Zs = forwardprop_SNN(Xj, parameters, num_hidden_layers)
+
+            if(i % print_every == 0):
+                costs.append(compute_cost_Softmax_NN(As[num_hidden_layers], Yj))
+                if(print_cost):
+                    print("Cost in iteration " + str(i) + " is = " + str(costs[i // print_every]))
+
+            grads = backprop_SNN(As, Zs, Yj, parameters, num_hidden_layers)
+            parameters = update_parameters_SNN(parameters, grads, learning_rate, num_hidden_layers)
+    
+    return parameters, costs
+
 
 
 """
