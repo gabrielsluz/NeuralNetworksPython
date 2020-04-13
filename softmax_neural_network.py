@@ -72,6 +72,7 @@ def backprop_SNN(As, Zs, Y, parameters, num_hidden_layers):
     for i in range(num_hidden_layers, 0, -1):
         grads["dW" + str(i)] = np.dot(dZ, As[i - 1].T)
         grads["db" + str(i)] = np.sum(dZ, axis=1, keepdims=True)
+
         #For the next layer (i-1):
         if i > 1:
             dA = np.dot(parameters["W" + str(i)].T, dZ)
@@ -201,7 +202,7 @@ def gradient_checking_SNN(X, Y, num_hidden_layers, parameters):
 
     aprox_grads = {}
 
-    epsilon = 0.00000000001
+    epsilon = 0.0000001
 
     for i in range(num_hidden_layers):
         #W
@@ -240,10 +241,10 @@ def gradient_checking_SNN(X, Y, num_hidden_layers, parameters):
 
 
 
-X = np.array([[1 , 0, 2], [1, 0, 2]])
-Y = np.array([[0, 1, 0], [1, 0, 1]])
+X = np.array([[0], [0]])
+Y = np.array([[0], [1]])
 #print(X,Y)
-layers = [2, 2, 2]
+layers = [2, 3, 2]
 num_hidden_layers = len(layers) - 1
 parameters = initialize_parameters_rand_NN(layers)
 #print(parameters)
@@ -251,10 +252,10 @@ parameters = initialize_parameters_rand_NN(layers)
 As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
 #print(Zs[num_hidden_layers], As[num_hidden_layers])
 
-grads = backprop_SNN(As, Zs, Y, parameters, num_hidden_layers)
+#grads = backprop_SNN(As, Zs, Y, parameters, num_hidden_layers)
 #print(grads)
 
-parameters = update_parameters_SNN(parameters, grads, 0.5, num_hidden_layers)
+#parameters = update_parameters_SNN(parameters, grads, 0.5, num_hidden_layers)
 
 gradient_checking_SNN(X, Y, num_hidden_layers, parameters)
 

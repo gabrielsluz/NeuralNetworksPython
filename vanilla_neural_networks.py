@@ -201,7 +201,7 @@ def gradient_checking(X, Y, num_hidden_layers, parameters):
 
     aprox_grads = {}
 
-    epsilon = 0.00000000001
+    epsilon = 0.0000001
 
     for i in range(num_hidden_layers):
         #W
