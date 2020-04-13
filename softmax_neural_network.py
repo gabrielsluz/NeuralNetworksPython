@@ -240,7 +240,7 @@ def gradient_checking_SNN(X, Y, num_hidden_layers, parameters):
     print(aprox_grads)
 
 
-
+"""
 X = np.array([[0], [0]])
 Y = np.array([[0], [1]])
 #print(X,Y)
@@ -258,4 +258,4 @@ As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
 #parameters = update_parameters_SNN(parameters, grads, 0.5, num_hidden_layers)
 
 gradient_checking_SNN(X, Y, num_hidden_layers, parameters)
-
+"""
