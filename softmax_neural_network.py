@@ -180,8 +180,8 @@ def predict_SNN(X, parameters, num_hidden_layers):
 def compute_cost_Softmax_NN(A, Y):
     """
     Argument:
-    A -- array of shape (1, m) of network outputs
-    Y -- array of shape (1, m) of the correct outputs
+    A -- matrix of shape (num_classes, m) of network outputs
+    Y -- matrix of shape (num_classes, m) of the correct outputs
     
     Returns:
     cost -- float
@@ -195,9 +195,9 @@ def compute_cost_Softmax_NN(A, Y):
 
     return cost
 
-def gradient_checking(X, Y, num_hidden_layers, parameters):
-    As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
-    grads = backprop_NN(As, Zs, Y, parameters, num_hidden_layers)
+def gradient_checking_SNN(X, Y, num_hidden_layers, parameters):
+    As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
+    grads = backprop_SNN(As, Zs, Y, parameters, num_hidden_layers)
 
     aprox_grads = {}
 
@@ -209,12 +209,12 @@ def gradient_checking(X, Y, num_hidden_layers, parameters):
         for j in range(parameters["W" + str(i+1)].shape[0]):
             for k in range(parameters["W" + str(i+1)].shape[1]):
                 parameters["W" + str(i+1)][j][k] += epsilon
-                As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
-                cost_plus = compute_cost_Sigmoid_NN(As[num_hidden_layers], Y)
+                As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
+                cost_plus = compute_cost_Softmax_NN(As[num_hidden_layers], Y)
 
                 parameters["W" + str(i+1)][j][k] -= 2*epsilon
-                As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
-                cost_minus = compute_cost_Sigmoid_NN(As[num_hidden_layers], Y)
+                As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
+                cost_minus = compute_cost_Softmax_NN(As[num_hidden_layers], Y)
 
                 W_array[j][k] = (cost_plus - cost_minus) / (2*epsilon)
                 parameters["W" + str(i+1)][j][k] += epsilon
@@ -223,12 +223,12 @@ def gradient_checking(X, Y, num_hidden_layers, parameters):
         b_array = np.zeros(parameters["b" + str(i+1)].shape)
         for j in range(parameters["b" + str(i+1)].shape[0]):
             parameters["b" + str(i+1)][j] += epsilon
-            As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
-            cost_plus = compute_cost_Sigmoid_NN(As[num_hidden_layers], Y)
+            As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
+            cost_plus = compute_cost_Softmax_NN(As[num_hidden_layers], Y)
 
             parameters["b" + str(i+1)][j] -= 2*epsilon
-            As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
-            cost_minus = compute_cost_Sigmoid_NN(As[num_hidden_layers], Y)
+            As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
+            cost_minus = compute_cost_Softmax_NN(As[num_hidden_layers], Y)
 
             b_array[j] = (cost_plus - cost_minus) / (2*epsilon)
             parameters["b" + str(i+1)][j] += epsilon
@@ -246,14 +246,15 @@ Y = np.array([[0, 1, 0], [1, 0, 1]])
 layers = [2, 2, 2]
 num_hidden_layers = len(layers) - 1
 parameters = initialize_parameters_rand_NN(layers)
-print(parameters)
+#print(parameters)
 
 As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
-print(Zs[num_hidden_layers], As[num_hidden_layers])
-"""
-grads = backprop_NN(As, Zs, Y, parameters, num_hidden_layers)
-#print(grads)
-parameters = update_parameters_NN(parameters, grads, 0.5, num_hidden_layers)
+#print(Zs[num_hidden_layers], As[num_hidden_layers])
 
-#gradient_checking(X, Y, num_hidden_layers, parameters)
-"""
+grads = backprop_SNN(As, Zs, Y, parameters, num_hidden_layers)
+#print(grads)
+
+parameters = update_parameters_SNN(parameters, grads, 0.5, num_hidden_layers)
+
+gradient_checking_SNN(X, Y, num_hidden_layers, parameters)
+
