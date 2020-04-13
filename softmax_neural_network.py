@@ -209,7 +209,7 @@ def random_mini_batches(X, Y, mini_batch_size):
 
     permutation = list(np.random.permutation(m))
     shuffled_X = X[:, permutation]
-    shuffled_Y = Y[:, permutation].reshape((1,m))
+    shuffled_Y = Y[:, permutation].reshape((Y.shape[0],m))
 
     for j in range(num_batches):
             if j*mini_batch_size >= m:
@@ -350,4 +350,9 @@ As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
 #parameters = update_parameters_SNN(parameters, grads, 0.5, num_hidden_layers)
 
 gradient_checking_SNN(X, Y, num_hidden_layers, parameters)
+
+
+X = np.array([[0, 1, 2, 3, 4], [0, 1, 2, 3, 4]])
+Y = np.array([[0, 1, 0, 0, 1], [1, 0, 1, 1, 0]])
+print(random_mini_batches(X, Y, 2))
 """
