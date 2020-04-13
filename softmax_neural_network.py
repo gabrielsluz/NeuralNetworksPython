@@ -290,19 +290,19 @@ def model_mini_batch_SNN(X, Y, layers, learning_rate = 0.5, mini_batch_size = 51
                 break
 
             first = j*mini_batch_size
-            last = min(m, j+1)*mini_batch_size) 
+            last = min(m, (j+1)*mini_batch_size) 
             Xj = X[:, first : last]
             Yj = Y[:, first : last]
 
             As, Zs = forwardprop_SNN(Xj, parameters, num_hidden_layers)
 
-            if(i % print_every == 0):
+            grads = backprop_SNN(As, Zs, Yj, parameters, num_hidden_layers)
+            parameters = update_parameters_SNN(parameters, grads, learning_rate, num_hidden_layers)
+            
+        if(i % print_every == 0):
                 costs.append(compute_cost_Softmax_NN(As[num_hidden_layers], Yj))
                 if(print_cost):
                     print("Cost in iteration " + str(i) + " is = " + str(costs[i // print_every]))
-
-            grads = backprop_SNN(As, Zs, Yj, parameters, num_hidden_layers)
-            parameters = update_parameters_SNN(parameters, grads, learning_rate, num_hidden_layers)
     
     return parameters, costs
 
