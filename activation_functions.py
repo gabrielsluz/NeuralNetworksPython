@@ -14,4 +14,4 @@ def ReLU_gradient(x):
 
 def softmax(x):
     x_exp = np.exp(x)
-    return x_exp / np.sum(x_exp)
+    return x_exp / np.sum(x_exp, axis = 0)

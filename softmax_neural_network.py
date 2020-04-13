@@ -189,7 +189,7 @@ def compute_cost_Softmax_NN(A, Y):
     """
     epsilon = 0.000000000001
     m = Y.shape[1]
-    #
+
     loss_array = -Y * np.log(A + epsilon) #Loss function with epsilon to avoid log(0)
     cost = np.sum(loss_array)/m
 
@@ -239,16 +239,18 @@ def gradient_checking(X, Y, num_hidden_layers, parameters):
     print(aprox_grads)
 
 
-"""
+
 X = np.array([[1 , 0, 2], [1, 0, 2]])
-Y = np.array([[0, 1, 0]])
+Y = np.array([[0, 1, 0], [1, 0, 1]])
 #print(X,Y)
-layers = [2, 2, 1]
+layers = [2, 2, 2]
 num_hidden_layers = len(layers) - 1
 parameters = initialize_parameters_rand_NN(layers)
-#print(parameters)
-As, Zs = forwardprop_NN(X, parameters, num_hidden_layers)
-#print(Zs[1], As[1])
+print(parameters)
+
+As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
+print(Zs[num_hidden_layers], As[num_hidden_layers])
+"""
 grads = backprop_NN(As, Zs, Y, parameters, num_hidden_layers)
 #print(grads)
 parameters = update_parameters_NN(parameters, grads, 0.5, num_hidden_layers)
