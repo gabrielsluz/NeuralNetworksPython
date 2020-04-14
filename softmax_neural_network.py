@@ -484,7 +484,7 @@ def model_mini_batch_SNN(X, Y, layers, learning_rate = 0.5, mini_batch_size = 51
 
 
 
-
+"""
 X = np.array([[1, 2, 3, 4], [1, 2, 3, 4]])
 Y = np.array([[0, 1, 0, 0], [1, 0, 1, 1]])
 #print(X,Y)
@@ -493,14 +493,14 @@ num_hidden_layers = len(layers) - 1
 parameters = initialize_parameters_rand_NN(layers)
 #print(parameters)
 
-As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
-AsD, ZsD, Ds = forwardprop_dropout_SNN(X, parameters, num_hidden_layers, 0.8)
+#As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
+As, Zs, Ds = forwardprop_dropout_SNN(X, parameters, num_hidden_layers, 0.8)
 print(Ds)
-"""
-#grads = backprop_SNN(As, Zs, Y, parameters, num_hidden_layers)
+
+grads = backprop_dropout_SNN(As, Zs, Ds, Y, parameters, num_hidden_layers, 0.8)
 #print(grads)
 
-#parameters = update_parameters_SNN(parameters, grads, 0.5, num_hidden_layers)
+parameters = update_parameters_SNN(parameters, grads, 0.5, num_hidden_layers)
 
 gradient_checking_SNN(X, Y, num_hidden_layers, parameters)
 
