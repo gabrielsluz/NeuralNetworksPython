@@ -376,12 +376,12 @@ def update_parameters_Adam(velocity, grads, parameters, beta1, beta2, learning_r
 
         velocity["v2W" + str(i)] = beta2 * velocity["v2W" + str(i)] + (1 - beta2) * np.power(grads["dW" + str(i)], 2)    
         velocity["v2W" + str(i)] += velocity["v2W" + str(i)] / (1 - beta2 **time ) 
-        velocity["v2b" + str(i)] = beta2 * velocity["v2b" + str(i)] + (1 - beta2) * np.power(grads["dW" + str(i)], 2)
+        velocity["v2b" + str(i)] = beta2 * velocity["v2b" + str(i)] + (1 - beta2) * np.power(grads["db" + str(i)], 2)
         velocity["v2b" + str(i)] += velocity["v2b" + str(i)] / (1 - beta2 **time )
 
         #Update parameters
-        parameters["W" + str(i)] -= (learning_rate / np.sqrt(velocity["v2W" + str(i)] + epsilon)) * velocity["vW" + str(i)]
-        parameters["b" + str(i)] -= (learning_rate / np.sqrt(velocity["v2b" + str(i)] + epsilon)) * velocity["vb" + str(i)]
+        parameters["W" + str(i)] -= learning_rate * velocity["vW" + str(i)] / np.sqrt(velocity["v2W" + str(i)] + epsilon)
+        parameters["b" + str(i)] -= learning_rate * velocity["vb" + str(i)] / np.sqrt(velocity["v2b" + str(i)] + epsilon)
 
     return velocity, parameters
 
@@ -587,7 +587,7 @@ def model_dropout_Adam_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.8, 
         return
     
     velocity = initialize_Adam(layers)
-    time = 0
+    time = 1 #Must be 1, if 0 then division by zero will occur in update_parameters_adam
 
     costs = []
     num_hidden_layers = len(layers) - 1
@@ -619,8 +619,13 @@ Y = np.array([[0, 1, 0, 0], [1, 0, 1, 1]])
 #print(X,Y)
 layers = [2, 3, 2]
 num_hidden_layers = len(layers) - 1
+
+parameters, costs = model_dropout_Adam_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.6, mini_batch_size = 512, beta1 = 0.9, beta2 = 0.999, num_iterations = 50, print_cost = True, print_every = 5, initialization = "rand", loaded_parameters = {})
+
+
 parameters = initialize_parameters_rand_NN(layers)
-#print(parameters)
+print(parameters)
+
 
 #As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
 As, Zs, Ds = forwardprop_dropout_SNN(X, parameters, num_hidden_layers, 0.8)
