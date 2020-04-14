@@ -7,4 +7,7 @@ It implements the following algorithms:
 
 -A Neural Network for binary classification (vanilla_neural_networks.py)
 
--A Neural Network with an softmax output layer (softmax_neural_networks.py)
+-A Neural Network with an softmax output layer (softmax_neural_networks.py) with:
+      Mini batches
+      Dropout regularization
+      Optimizers: Gradient descent with momentum, RMSprop and Adam
