@@ -453,7 +453,7 @@ def model_mini_batch_dropout_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob =
     return parameters, costs
 
 #Main function for mini batches with dropout and Adam optimization
-def model_dropout_Adam_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.8, mini_batch_size = 512, beta1 = 0.9, beta2 = 0.999, num_iterations = 1000, print_cost = False, print_every = 100, initialization = "rand", loaded_parameters = {}):
+def model_dropout_Adam_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.8, mini_batch_size = 512, beta1 = 0.9, beta2 = 0.999, optimizer = "momentum", num_iterations = 1000, print_cost = False, print_every = 100, initialization = "rand", loaded_parameters = {}):
     """
     Argument:
     X -- matrix of shape (n_x, m) of inputs
@@ -462,6 +462,10 @@ def model_dropout_Adam_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.8, 
     mini_batch_size -- integer that indicates the size of each mini batch
     beta1 -- float Parameter for momentum
     beta2 -- float Parameter for RMSProp
+    optimizer  -- string that defines which optimizer to use:
+                    adam
+                    rms
+                    momentum
     learning_rate -- float
     keep_prob -- Probability of keeping a neuron in dropout
     num_iterations -- integer that defines how many iterations of gradient descent
@@ -488,7 +492,19 @@ def model_dropout_Adam_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.8, 
         print("Invalid initialization. Exiting")
         return
     
-    adam = initialize_Adam(layers)
+    if(optimizer == "adam"):
+        opt_params = initialize_Adam(layers)
+        opt_update_params = update_parameters_Adam
+    elif(optimizer == "rms"):
+        opt_params = initialize_RMSprop(layers)
+        opt_update_params = update_parameters_RMSprop
+    elif(optimizer == "momentum"):
+        opt_params = initialize_Momentum(layers)
+        opt_update_params = update_parameters_Momentum
+    else:
+        print("Invalid Optimizer. Exiting")
+        return
+
     time = 1 #Must be 1, if 0 then division by zero will occur in update_parameters_adam
 
     costs = []
@@ -505,7 +521,7 @@ def model_dropout_Adam_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.8, 
 
             grads = backprop_dropout_SNN(As, Zs, Ds, Yj, parameters, num_hidden_layers, keep_prob)
 
-            adam, parameters = update_parameters_Adam(adam, grads, parameters, beta1, beta2, learning_rate, num_hidden_layers, time)
+            opt_params, parameters = opt_update_params(opt_params, grads, parameters, beta1, beta2, learning_rate, num_hidden_layers, time)
             time += 1
             
         if(i % print_every == 0):

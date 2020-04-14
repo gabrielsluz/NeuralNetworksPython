@@ -1,5 +1,7 @@
 import numpy as np
 
+#The functions must have the same parameters for the model to work
+
 #Adam optimizer implementation
 def initialize_Adam(layers):
     """
@@ -92,7 +94,7 @@ def initialize_Momentum(layers):
 
     return velocity
 
-def update_parameters_Momentum(velocity, grads, parameters, beta1, learning_rate, num_hidden_layers, time):
+def update_parameters_Momentum(velocity, grads, parameters, beta1, beta2, learning_rate, num_hidden_layers, time):
     """
     Argument:
     velocity -- dictionary containing the velocity values:
@@ -150,7 +152,7 @@ def initialize_RMSprop(layers):
 
     return rms
 
-def update_parameters_RMSprop(rms, grads, parameters, beta2, learning_rate, num_hidden_layers, time):
+def update_parameters_RMSprop(rms, grads, parameters, beta1, beta2, learning_rate, num_hidden_layers, time):
     """
     Argument:
     rms -- dictionary containing the rms values:
@@ -162,7 +164,7 @@ def update_parameters_RMSprop(rms, grads, parameters, beta2, learning_rate, num_
     parameters -- dictionary containing the parameters:
                     Wi -- weight matrix of shape (n_h[i], n_h[i-1])
                     bi -- bias array of shape (n_h[i], 1) 
-    beta1 -- float Parameter for momentum
+    beta2 -- float Parameter for RMS
     layers -- a list that stores the width of each hidden layer and of the input layer
     time -- Indicates in which iteration it is
     
