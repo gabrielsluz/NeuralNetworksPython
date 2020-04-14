@@ -452,8 +452,8 @@ def model_mini_batch_dropout_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob =
     
     return parameters, costs
 
-#Main function for mini batches with dropout and Adam optimization
-def model_dropout_Adam_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.8, mini_batch_size = 512, beta1 = 0.9, beta2 = 0.999, optimizer = "momentum", num_iterations = 1000, print_cost = False, print_every = 100, initialization = "rand", loaded_parameters = {}):
+#Main function for mini batches with dropout and different optimization algorithms
+def model_dropout_Opt_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.8, mini_batch_size = 512, beta1 = 0.9, beta2 = 0.999, optimizer = "momentum", num_iterations = 1000, print_cost = False, print_every = 100, initialization = "rand", loaded_parameters = {}):
     """
     Argument:
     X -- matrix of shape (n_x, m) of inputs
