@@ -316,64 +316,74 @@ def backprop_dropout_SNN(As, Zs, Ds, Y, parameters, num_hidden_layers, keep_prob
     return grads
 
 
-#Main function for mini batches with dropout
-def model_mini_batch_dropout_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.8, mini_batch_size = 512, num_iterations = 1000, print_cost = False, print_every = 100, initialization = "rand", loaded_parameters = {}):
+def initialize_Adam(layers):
     """
     Argument:
-    X -- matrix of shape (n_x, m) of inputs
-    Y -- array of shape (1, m) of the correct outputs
-    layers -- (n_x,n_h[1], ... ,n_h[n]) The width of each layer, including input and output
-    mini_batch_size -- integer that indicates the size of each mini batch
-    learning_rate -- float
-    keep_prob -- Probability of keeping a neuron in dropout
-    num_iterations -- integer that defines how many iterations of gradient descent
-    print_cost = True prints cost
-    initialization -- String the informs the type of weight initalization :
-                        rand -- Random *0.01
-                        he -- He intialization
-                        load -- Load the parameters with loaded_parameters
+    layers -- a list that stores the width of each hidden layer and of the input layer
     
     Returns:
+    velocity -- dictionary containing the velocity values:
+                    vWi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    vbi -- bias array of shape (n_h[i], 1) 
+    """
+    velocity = {}
+
+    for i in range(1, len(layers)):
+        velocity["vW" + str(i)] = np.zeros((layers[i], layers[i-1])) 
+        velocity["vb" + str(i)] = np.zeros((layers[i], 1))
+        velocity["v2W" + str(i)] = np.zeros((layers[i], layers[i-1])) 
+        velocity["v2b" + str(i)] = np.zeros((layers[i], 1))
+
+    return velocity
+
+def update_parameters_Adam(velocity, grads, parameters, beta1, beta2, learning_rate, num_hidden_layers, time):
+    """
+    Argument:
+    velocity -- dictionary containing the velocity values:
+                    vWi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    vbi -- bias array of shape (n_h[i], 1) 
+                    v2Wi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    v2bi -- bias array of shape (n_h[i], 1)
+    grads -- dictionary containing the gradients values:
+                    dWi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    dbi -- bias array of shape (n_h[i], 1) 
+    parameters -- dictionary containing the parameters:
+                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    bi -- bias array of shape (n_h[i], 1) 
+    beta1 -- float Parameter for momentum
+    beta2 -- float Parameter for RMSProp
+    layers -- a list that stores the width of each hidden layer and of the input layer
+    time -- Indicates in which iteration it is
+    
+    Returns:
+    velocity -- dictionary containing the velocity values:
+                    vWi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    vbi -- bias array of shape (n_h[i], 1) 
+                    v2Wi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    v2bi -- bias array of shape (n_h[i], 1)
     parameters -- dictionary containing the parameters:
                     Wi -- weight matrix of shape (n_h[i], n_h[i-1])
                     bi -- bias array of shape (n_h[i], 1)
-    costs -- array with costs from every print_every iterations
-    
     """
-    if(initialization == "load"):
-        parameters = loaded_parameters
-    elif(initialization == "he"):
-        parameters = initialize_parameters_He_NN(layers)
-    elif(initialization == "rand"):
-        parameters = initialize_parameters_rand_NN(layers)
-    else:
-        print("Invalid initialization. Exiting")
-        return
-    
+    epsilon = 1e-8
 
-    costs = []
-    num_hidden_layers = len(layers) - 1
+    for i in range(1, num_hidden_layers + 1):
+        #Weighted average and bias correction
+        velocity["vW" + str(i)] = beta1 * velocity["vW" + str(i)] + (1 - beta1) * grads["dW" + str(i)]
+        velocity["vW" + str(i)] += velocity["vW" + str(i)] / (1 - beta1 **time )
+        velocity["vb" + str(i)] = beta1 * velocity["vb" + str(i)] + (1 - beta1) * grads["db" + str(i)]
+        velocity["vb" + str(i)] += velocity["vb" + str(i)] / (1 - beta1 **time )
 
-    mini_batches = random_mini_batches(X, Y, mini_batch_size)
-    num_batches = len(mini_batches)
+        velocity["v2W" + str(i)] = beta2 * velocity["v2W" + str(i)] + (1 - beta2) * np.power(grads["dW" + str(i)], 2)    
+        velocity["v2W" + str(i)] += velocity["v2W" + str(i)] / (1 - beta2 **time ) 
+        velocity["v2b" + str(i)] = beta2 * velocity["v2b" + str(i)] + (1 - beta2) * np.power(grads["dW" + str(i)], 2)
+        velocity["v2b" + str(i)] += velocity["v2b" + str(i)] / (1 - beta2 **time )
 
-    for i in range(num_iterations):
-        for j in range(num_batches):
-            Xj, Yj = mini_batches[j]
+        #Update parameters
+        parameters["W" + str(i)] -= (learning_rate / np.sqrt(velocity["v2W" + str(i)] + epsilon)) * velocity["vW" + str(i)]
+        parameters["b" + str(i)] -= (learning_rate / np.sqrt(velocity["v2b" + str(i)] + epsilon)) * velocity["vb" + str(i)]
 
-            As, Zs, Ds = forwardprop_dropout_SNN(Xj, parameters, num_hidden_layers, keep_prob)
-
-            grads = backprop_dropout_SNN(As, Zs, Ds, Yj, parameters, num_hidden_layers, keep_prob)
-            parameters = update_parameters_SNN(parameters, grads, learning_rate, num_hidden_layers)
-            
-        if(i % print_every == 0):
-                costs.append(compute_cost_Softmax_NN(As[num_hidden_layers], Yj))
-                if(print_cost):
-                    print("Cost in iteration " + str(i) + " is = " + str(costs[i // print_every]))
-    
-    return parameters, costs
-
-
+    return velocity, parameters
 
 
 #Main function
@@ -483,6 +493,125 @@ def model_mini_batch_SNN(X, Y, layers, learning_rate = 0.5, mini_batch_size = 51
     return parameters, costs
 
 
+#Main function for mini batches with dropout
+def model_mini_batch_dropout_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.8, mini_batch_size = 512, num_iterations = 1000, print_cost = False, print_every = 100, initialization = "rand", loaded_parameters = {}):
+    """
+    Argument:
+    X -- matrix of shape (n_x, m) of inputs
+    Y -- array of shape (1, m) of the correct outputs
+    layers -- (n_x,n_h[1], ... ,n_h[n]) The width of each layer, including input and output
+    mini_batch_size -- integer that indicates the size of each mini batch
+    learning_rate -- float
+    keep_prob -- Probability of keeping a neuron in dropout
+    num_iterations -- integer that defines how many iterations of gradient descent
+    print_cost = True prints cost
+    initialization -- String the informs the type of weight initalization :
+                        rand -- Random *0.01
+                        he -- He intialization
+                        load -- Load the parameters with loaded_parameters
+    
+    Returns:
+    parameters -- dictionary containing the parameters:
+                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    bi -- bias array of shape (n_h[i], 1)
+    costs -- array with costs from every print_every iterations
+    
+    """
+    if(initialization == "load"):
+        parameters = loaded_parameters
+    elif(initialization == "he"):
+        parameters = initialize_parameters_He_NN(layers)
+    elif(initialization == "rand"):
+        parameters = initialize_parameters_rand_NN(layers)
+    else:
+        print("Invalid initialization. Exiting")
+        return
+    
+
+    costs = []
+    num_hidden_layers = len(layers) - 1
+
+    mini_batches = random_mini_batches(X, Y, mini_batch_size)
+    num_batches = len(mini_batches)
+
+    for i in range(num_iterations):
+        for j in range(num_batches):
+            Xj, Yj = mini_batches[j]
+
+            As, Zs, Ds = forwardprop_dropout_SNN(Xj, parameters, num_hidden_layers, keep_prob)
+
+            grads = backprop_dropout_SNN(As, Zs, Ds, Yj, parameters, num_hidden_layers, keep_prob)
+            parameters = update_parameters_SNN(parameters, grads, learning_rate, num_hidden_layers)
+            
+        if(i % print_every == 0):
+                costs.append(compute_cost_Softmax_NN(As[num_hidden_layers], Yj))
+                if(print_cost):
+                    print("Cost in iteration " + str(i) + " is = " + str(costs[i // print_every]))
+    
+    return parameters, costs
+
+#Main function for mini batches with dropout and Adam optimization
+def model_dropout_Adam_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.8, mini_batch_size = 512, beta1 = 0.9, beta2 = 0.999, num_iterations = 1000, print_cost = False, print_every = 100, initialization = "rand", loaded_parameters = {}):
+    """
+    Argument:
+    X -- matrix of shape (n_x, m) of inputs
+    Y -- array of shape (1, m) of the correct outputs
+    layers -- (n_x,n_h[1], ... ,n_h[n]) The width of each layer, including input and output
+    mini_batch_size -- integer that indicates the size of each mini batch
+    beta1 -- float Parameter for momentum
+    beta2 -- float Parameter for RMSProp
+    learning_rate -- float
+    keep_prob -- Probability of keeping a neuron in dropout
+    num_iterations -- integer that defines how many iterations of gradient descent
+    print_cost = True prints cost
+    initialization -- String the informs the type of weight initalization :
+                        rand -- Random *0.01
+                        he -- He intialization
+                        load -- Load the parameters with loaded_parameters
+    
+    Returns:
+    parameters -- dictionary containing the parameters:
+                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
+                    bi -- bias array of shape (n_h[i], 1)
+    costs -- array with costs from every print_every iterations
+    
+    """
+    if(initialization == "load"):
+        parameters = loaded_parameters
+    elif(initialization == "he"):
+        parameters = initialize_parameters_He_NN(layers)
+    elif(initialization == "rand"):
+        parameters = initialize_parameters_rand_NN(layers)
+    else:
+        print("Invalid initialization. Exiting")
+        return
+    
+    velocity = initialize_Adam(layers)
+    time = 0
+
+    costs = []
+    num_hidden_layers = len(layers) - 1
+
+    mini_batches = random_mini_batches(X, Y, mini_batch_size)
+    num_batches = len(mini_batches)
+
+    for i in range(num_iterations):
+        for j in range(num_batches):
+            Xj, Yj = mini_batches[j]
+
+            As, Zs, Ds = forwardprop_dropout_SNN(Xj, parameters, num_hidden_layers, keep_prob)
+
+            grads = backprop_dropout_SNN(As, Zs, Ds, Yj, parameters, num_hidden_layers, keep_prob)
+
+            velocity, parameters = update_parameters_Adam(velocity, grads, parameters, beta1, beta2, learning_rate, num_hidden_layers, time)
+            time += 1
+            
+        if(i % print_every == 0):
+                costs.append(compute_cost_Softmax_NN(As[num_hidden_layers], Yj))
+                if(print_cost):
+                    print("Cost in iteration " + str(i) + " is = " + str(costs[i // print_every]))
+    
+    return parameters, costs
 
 """
 X = np.array([[1, 2, 3, 4], [1, 2, 3, 4]])
