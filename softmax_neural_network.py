@@ -217,8 +217,8 @@ def random_mini_batches(X, Y, mini_batch_size):
 
             first = j*mini_batch_size
             last = min(m, (j+1)*mini_batch_size) 
-            Xj = X[:, first : last]
-            Yj = Y[:, first : last]
+            Xj = shuffled_X[:, first : last]
+            Yj = shuffled_Y[:, first : last]
             mini_batch_j = (Xj, Yj)
             mini_batches.append(mini_batch_j)
     return mini_batches
@@ -350,7 +350,6 @@ As, Zs = forwardprop_SNN(X, parameters, num_hidden_layers)
 #parameters = update_parameters_SNN(parameters, grads, 0.5, num_hidden_layers)
 
 gradient_checking_SNN(X, Y, num_hidden_layers, parameters)
-
 
 X = np.array([[0, 1, 2, 3, 4], [0, 1, 2, 3, 4]])
 Y = np.array([[0, 1, 0, 0, 1], [1, 0, 1, 1, 0]])
