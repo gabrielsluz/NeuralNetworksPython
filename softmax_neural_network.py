@@ -1,17 +1,17 @@
 """
-This file contains the implementation of a N layer Neural Network for binary classification.
-The hidden units are all of the form: ReLU(np.dot(W, A) + b), execept for the last, which is sigmoid(np.dot(W, A) + b)
-It will support in the future some regularization techniques and inicialization.
+This file contains the implementation of a N layer Neural Network for multi class classification.
+The hidden units are all of the form: ReLU(np.dot(W, A) + b), execept for the last, which is softmax(np.dot(W, A) + b)
 
 Requirements:   numpy
-                math
                 activation_functions (file in folder)
                 weight_initializations (file in folder)
+                optimization (file in folder)
 """
 import numpy as np
-import math
 from activation_functions import *
 from weight_initializations import *
+from optimization import *
+from mini_batch import *
 
 
 def forwardprop_SNN(X, parameters, num_hidden_layers):
@@ -206,36 +206,7 @@ def gradient_checking_SNN(X, Y, num_hidden_layers, parameters):
     print("Aproximated grads:")
     print(aprox_grads)
 
-def random_mini_batches(X, Y, mini_batch_size):
-    """
-    Argument:
-    X -- matrix of shape (n_x, m) of inputs
-    Y -- array of shape (1, m) of the correct outputs
-    mini_batch_size -- integer containing the number of examples in each mini batch
-    
-    Returns:
-    mini_batches -- a list of tuples containing pair o Xj and Yj
-    """
 
-    m = X.shape[1]
-    num_batches = math.ceil(m / mini_batch_size)
-    mini_batches = []
-
-    permutation = list(np.random.permutation(m))
-    shuffled_X = X[:, permutation]
-    shuffled_Y = Y[:, permutation].reshape((Y.shape[0],m))
-
-    for j in range(num_batches):
-            if j*mini_batch_size >= m:
-                break
-
-            first = j*mini_batch_size
-            last = min(m, (j+1)*mini_batch_size) 
-            Xj = shuffled_X[:, first : last]
-            Yj = shuffled_Y[:, first : last]
-            mini_batch_j = (Xj, Yj)
-            mini_batches.append(mini_batch_j)
-    return mini_batches
 
 def forwardprop_dropout_SNN(X, parameters, num_hidden_layers, keep_prob):
     """
@@ -315,75 +286,6 @@ def backprop_dropout_SNN(As, Zs, Ds, Y, parameters, num_hidden_layers, keep_prob
     
     return grads
 
-
-def initialize_Adam(layers):
-    """
-    Argument:
-    layers -- a list that stores the width of each hidden layer and of the input layer
-    
-    Returns:
-    velocity -- dictionary containing the velocity values:
-                    vWi -- weight matrix of shape (n_h[i], n_h[i-1])
-                    vbi -- bias array of shape (n_h[i], 1) 
-    """
-    velocity = {}
-
-    for i in range(1, len(layers)):
-        velocity["vW" + str(i)] = np.zeros((layers[i], layers[i-1])) 
-        velocity["vb" + str(i)] = np.zeros((layers[i], 1))
-        velocity["v2W" + str(i)] = np.zeros((layers[i], layers[i-1])) 
-        velocity["v2b" + str(i)] = np.zeros((layers[i], 1))
-
-    return velocity
-
-def update_parameters_Adam(velocity, grads, parameters, beta1, beta2, learning_rate, num_hidden_layers, time):
-    """
-    Argument:
-    velocity -- dictionary containing the velocity values:
-                    vWi -- weight matrix of shape (n_h[i], n_h[i-1])
-                    vbi -- bias array of shape (n_h[i], 1) 
-                    v2Wi -- weight matrix of shape (n_h[i], n_h[i-1])
-                    v2bi -- bias array of shape (n_h[i], 1)
-    grads -- dictionary containing the gradients values:
-                    dWi -- weight matrix of shape (n_h[i], n_h[i-1])
-                    dbi -- bias array of shape (n_h[i], 1) 
-    parameters -- dictionary containing the parameters:
-                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
-                    bi -- bias array of shape (n_h[i], 1) 
-    beta1 -- float Parameter for momentum
-    beta2 -- float Parameter for RMSProp
-    layers -- a list that stores the width of each hidden layer and of the input layer
-    time -- Indicates in which iteration it is
-    
-    Returns:
-    velocity -- dictionary containing the velocity values:
-                    vWi -- weight matrix of shape (n_h[i], n_h[i-1])
-                    vbi -- bias array of shape (n_h[i], 1) 
-                    v2Wi -- weight matrix of shape (n_h[i], n_h[i-1])
-                    v2bi -- bias array of shape (n_h[i], 1)
-    parameters -- dictionary containing the parameters:
-                    Wi -- weight matrix of shape (n_h[i], n_h[i-1])
-                    bi -- bias array of shape (n_h[i], 1)
-    """
-    epsilon = 1e-8
-
-    for i in range(1, num_hidden_layers + 1):
-        #Weighted average and bias correction
-        velocity["vW" + str(i)] = beta1 * velocity["vW" + str(i)] + (1 - beta1) * grads["dW" + str(i)]
-        velocity["vW" + str(i)] += velocity["vW" + str(i)] / (1 - beta1 **time )
-        velocity["vb" + str(i)] = beta1 * velocity["vb" + str(i)] + (1 - beta1) * grads["db" + str(i)]
-        velocity["vb" + str(i)] += velocity["vb" + str(i)] / (1 - beta1 **time )
-
-        velocity["v2W" + str(i)] = beta2 * velocity["v2W" + str(i)] + (1 - beta2) * np.power(grads["dW" + str(i)], 2)    
-        velocity["v2W" + str(i)] += velocity["v2W" + str(i)] / (1 - beta2 **time ) 
-        velocity["v2b" + str(i)] = beta2 * velocity["v2b" + str(i)] + (1 - beta2) * np.power(grads["db" + str(i)], 2)
-        velocity["v2b" + str(i)] += velocity["v2b" + str(i)] / (1 - beta2 **time )
-
-        #Update parameters
-        parameters["W" + str(i)] -= learning_rate * velocity["vW" + str(i)] / np.sqrt(velocity["v2W" + str(i)] + epsilon)
-        parameters["b" + str(i)] -= learning_rate * velocity["vb" + str(i)] / np.sqrt(velocity["v2b" + str(i)] + epsilon)
-
-    return velocity, parameters
 
 
 #Main function
@@ -586,7 +488,7 @@ def model_dropout_Adam_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.8, 
         print("Invalid initialization. Exiting")
         return
     
-    velocity = initialize_Adam(layers)
+    adam = initialize_Adam(layers)
     time = 1 #Must be 1, if 0 then division by zero will occur in update_parameters_adam
 
     costs = []
@@ -603,7 +505,7 @@ def model_dropout_Adam_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.8, 
 
             grads = backprop_dropout_SNN(As, Zs, Ds, Yj, parameters, num_hidden_layers, keep_prob)
 
-            velocity, parameters = update_parameters_Adam(velocity, grads, parameters, beta1, beta2, learning_rate, num_hidden_layers, time)
+            adam, parameters = update_parameters_Adam(adam, grads, parameters, beta1, beta2, learning_rate, num_hidden_layers, time)
             time += 1
             
         if(i % print_every == 0):
@@ -622,6 +524,19 @@ num_hidden_layers = len(layers) - 1
 
 parameters, costs = model_dropout_Adam_SNN(X, Y, layers, learning_rate = 0.5,  keep_prob = 0.6, mini_batch_size = 512, beta1 = 0.9, beta2 = 0.999, num_iterations = 50, print_cost = True, print_every = 5, initialization = "rand", loaded_parameters = {})
 
+
+parameters = initialize_parameters_rand_NN(layers)
+
+adam = initialize_Adam(layers)
+time = 1
+#print(adam)
+As, Zs, Ds = forwardprop_dropout_SNN(X, parameters, num_hidden_layers, 0.8)
+grads = backprop_dropout_SNN(As, Zs, Ds, Y, parameters, num_hidden_layers, 0.8)
+print(grads)
+
+adam, parameters = update_parameters_Adam(adam, grads, parameters, 0.9, 0.99, 0.5, num_hidden_layers, time)
+print(adam)
+#
 
 parameters = initialize_parameters_rand_NN(layers)
 print(parameters)
